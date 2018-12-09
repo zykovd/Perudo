@@ -9,7 +9,7 @@ import com.suai.perudo.model.Player;
 
 import java.util.HashMap;
 
-class Party {
+public class Party {
     private long id;
     private PerudoModel model;
     private String message;
@@ -17,6 +17,13 @@ class Party {
     private HashMap<WebUser, Player> players = new HashMap<>();
 
     public Party(long id) {
+        this.id = id;
+        this.message = "Party" + id;
+    }
+
+    public Party(long id, String message) {
+        this.id = id;
+        this.message = message;
     }
 
     public PerudoModel getModel() {
@@ -57,5 +64,9 @@ class Party {
 
     public long getId() {
         return id;
+    }
+
+    public PartyHeader getPartyHeader() {
+        return new PartyHeader(this);
     }
 }

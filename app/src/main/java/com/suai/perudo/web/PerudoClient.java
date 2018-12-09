@@ -56,13 +56,15 @@ public class PerudoClient extends Thread {
             InetAddress address = InetAddress.getByAddress(bytes);
             this.socket = new Socket(address, port);
 
+            this.dataOutputStream = new DataOutputStream(socket.getOutputStream());
             if (isOffline) {
-                this.dataOutputStream = new DataOutputStream(socket.getOutputStream());
                 dataOutputStream.writeUTF(player.toJson());
-
-                this.dataInputStream = new DataInputStream(socket.getInputStream());
+            }
+            this.dataInputStream = new DataInputStream(socket.getInputStream());
+            if (isOffline) {
                 PerudoServerResponse perudoServerResponse = gson.fromJson(dataInputStream.readUTF(), PerudoServerResponse.class);
             }
+
 
         } catch (IOException e) {
             e.printStackTrace();

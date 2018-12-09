@@ -89,8 +89,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 if (perudoClient == null) {
                     perudoClient = new PerudoClient(address, port, new Player(login), false);
                     perudoApplication.setPerudoClient(perudoClient);
+                    perudoClient.start();
+                    try {
+                        perudoClient.join();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
-
                 perudoClientCommand = new PerudoClientCommand(PerudoClientCommandEnum.LOGIN, login, password);
                 Thread sender = new Thread(new Runnable() {
                     @Override
@@ -135,8 +140,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 if (perudoClient == null) {
                     perudoClient = new PerudoClient(address, port, new Player(login), false);
                     perudoApplication.setPerudoClient(perudoClient);
+                    perudoClient.start();
+                    try {
+                        perudoClient.join();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
-
                 perudoClientCommand = new PerudoClientCommand(PerudoClientCommandEnum.REGISTER, login, password);
                 Thread sender2 = new Thread(new Runnable() {
                     @Override
