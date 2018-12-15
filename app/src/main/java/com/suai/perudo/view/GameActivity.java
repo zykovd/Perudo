@@ -130,7 +130,12 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        finish();
+                        if (command.getCommand().equals(PerudoClientCommandEnum.DISCONNECT)) {
+                            finishAffinity();
+                        }
+                        else {
+                            finish();
+                        }
                     }
                 });
             }
@@ -148,47 +153,47 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onBackPressed() {
-        String title = "Warning";
-        String message = "Are you sure you want to exit game?";
-        String button1String = "Yes";
-        String button2String = "No";
-
-        AlertDialog.Builder ad = new AlertDialog.Builder(context);
-        ad.setTitle(title);
-        ad.setMessage(message);
-        ad.setPositiveButton(button1String, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int arg1) {
-                Thread sender = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            perudoClient.sendCommand(command);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-                sender.start();
-                try {
-                    sender.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        finish();
-                    }
-                });
-            }
-        });
-        ad.setNegativeButton(button2String, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int arg1) {
-
-            }
-        });
-        ad.setCancelable(true);
-        ad.show();
+//        String title = "Warning";
+//        String message = "Are you sure you want to exit game?";
+//        String button1String = "Yes";
+//        String button2String = "No";
+//
+//        AlertDialog.Builder ad = new AlertDialog.Builder(context);
+//        ad.setTitle(title);
+//        ad.setMessage(message);
+//        ad.setPositiveButton(button1String, new DialogInterface.OnClickListener() {
+//            public void onClick(DialogInterface dialog, int arg1) {
+//                Thread sender = new Thread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        try {
+//                            perudoClient.sendCommand(command);
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                });
+//                sender.start();
+//                try {
+//                    sender.join();
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        finish();
+//                    }
+//                });
+//            }
+//        });
+//        ad.setNegativeButton(button2String, new DialogInterface.OnClickListener() {
+//            public void onClick(DialogInterface dialog, int arg1) {
+//
+//            }
+//        });
+//        ad.setCancelable(true);
+//        ad.show();
     }
 
 //    @Override
@@ -302,9 +307,9 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         quantityWarning = Toast.makeText(getApplicationContext(), "Please, choose quantity!", Toast.LENGTH_SHORT);
         diceWarning = Toast.makeText(getApplicationContext(), "Please, choose dice!", Toast.LENGTH_SHORT);
 
-        if (!isGameStarted) {
-            Toast.makeText(getApplicationContext(), "Game is not started!", Toast.LENGTH_LONG).show();
-        }
+//        if (!isGameStarted) {
+//            Toast.makeText(getApplicationContext(), "Game is not started!", Toast.LENGTH_LONG).show();
+//        }
     }
 
     @Override

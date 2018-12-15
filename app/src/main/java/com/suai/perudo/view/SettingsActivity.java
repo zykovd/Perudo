@@ -144,7 +144,7 @@ public class SettingsActivity extends AppCompatActivity implements View.OnClickL
                     toast.show();
                     break;
                 }
-                RequestAsyncTask requestAsyncTask = new RequestAsyncTask(this);
+                RequestAsyncTask requestAsyncTask = new RequestAsyncTask(this, String.valueOf(editPartyTitle.getText()));
                 requestAsyncTask.execute();
                 break;
         }
@@ -191,12 +191,14 @@ public class SettingsActivity extends AppCompatActivity implements View.OnClickL
     private static class RequestAsyncTask extends AsyncTask<Void, Void, Void> {
         private WeakReference<SettingsActivity> settingsActivityWeakReference;
         private ProgressDialog dialog;
+        private String partyTitle;
         private boolean socketEx = false;
 
-        RequestAsyncTask(SettingsActivity activity) {
-            settingsActivityWeakReference = new WeakReference<SettingsActivity>(activity);
+        RequestAsyncTask(SettingsActivity activity, String partyTitle) {
+            this.settingsActivityWeakReference = new WeakReference<SettingsActivity>(activity);
             this.dialog = new ProgressDialog(activity);
-            dialog.setCancelable(false);
+            this.dialog.setCancelable(false);
+            this.partyTitle = partyTitle;
         }
 
         @Override
@@ -207,10 +209,8 @@ public class SettingsActivity extends AppCompatActivity implements View.OnClickL
 
         protected Void doInBackground(Void... args) {
             try {
-                settingsActivityWeakReference.get().perudoClient.sendCommand(new PerudoClientCommand(PerudoClientCommandEnum.NEW_PARTY));
-                System.out.println("Sended command");
+                settingsActivityWeakReference.get().perudoClient.sendCommand(new PerudoClientCommand(PerudoClientCommandEnum.NEW_PARTY, partyTitle));
                 settingsActivityWeakReference.get().perudoServerResponse = settingsActivityWeakReference.get().perudoClient.getResponse();
-                System.out.println("Recieved response");
             } catch (IOException e) {
                 e.printStackTrace();
                 socketEx = true;

@@ -22,40 +22,15 @@ public class WebUser {
     private Socket socket;
     private DataInputStream dataInputStream;
     private DataOutputStream dataOutputStream;
+    private Party currentParty;
 
-//    private ObjectOutputStream objectOutputStream;
-//    private ObjectInputStream objectInputStream;
+    private String login;
 
     public WebUser(Socket socket) throws IOException {
         this.socket = socket;
         this.dataInputStream = new DataInputStream(socket.getInputStream());
         this.dataOutputStream = new DataOutputStream(socket.getOutputStream());
-//        this.objectInputStream = new ObjectInputStream(socket.getInputStream());
-//        this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
     }
-
-//    public ObjectOutputStream getObjectOutputStream() {
-//        if (objectOutputStream == null) {
-//            try {
-//                this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        return objectOutputStream;
-//    }
-//
-//    public ObjectInputStream getObjectInputStream() {
-//        if (objectInputStream == null) {
-//            try {
-//                this.objectInputStream = new ObjectInputStream(socket.getInputStream());
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        return objectInputStream;
-//    }
-
 
     public DataInputStream getDataInputStream() {
         return dataInputStream;
@@ -65,10 +40,15 @@ public class WebUser {
         return dataOutputStream;
     }
 
+    public Party getCurrentParty() {
+        return currentParty;
+    }
+
+    public void setCurrentParty(Party currentParty) {
+        this.currentParty = currentParty;
+    }
 
     public void disconnect() throws IOException {
-//        objectOutputStream.close();
-//        objectInputStream.close();
         dataInputStream.close();
         dataOutputStream.close();
         socket.close();
@@ -79,5 +59,27 @@ public class WebUser {
             return false;
         else
             return socket.isConnected();
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (this.getClass() != obj.getClass())
+            return false;
+        return this.getLogin().equals(((WebUser) obj).getLogin());
+    }
+
+    @Override
+    public int hashCode() {
+        return login.hashCode();
     }
 }

@@ -1,8 +1,10 @@
 package com.suai.perudo.view;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -18,7 +20,6 @@ import android.widget.Toast;
 
 import com.suai.perudo.R;
 import com.suai.perudo.model.Player;
-import com.suai.perudo.web.Party;
 import com.suai.perudo.web.PartyHeader;
 import com.suai.perudo.web.PerudoClient;
 import com.suai.perudo.web.PerudoClientCommand;
@@ -27,6 +28,7 @@ import com.suai.perudo.web.PerudoServerResponse;
 import com.suai.perudo.web.PerudoServerResponseEnum;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -116,7 +118,7 @@ public class JoinActivity extends AppCompatActivity implements View.OnClickListe
             layout.setLayoutParams(layoutParams);
 
             TextView title = (TextView) inflater.inflate(R.layout.join_title, null,false);
-            title.setText(parties.get(i).getMessage());
+            title.setText(parties.get(i).getTitle());
             LinearLayout.LayoutParams layoutParams1 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.MATCH_PARENT);
             layoutParams1.weight = 5;
             layoutParams1.gravity = Gravity.CENTER;
@@ -160,32 +162,9 @@ public class JoinActivity extends AppCompatActivity implements View.OnClickListe
                 return;
         }
         PartyHeader partyHeader = buttons.get((ImageButton)v);
-
         perudoClientCommand = new PerudoClientCommand(PerudoClientCommandEnum.JOIN, partyHeader);
-        Thread sender = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    perudoClient.sendCommand(perudoClientCommand);
-                    perudoServerResponse = perudoClient.getResponse();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        sender.start();
-        try {
-            sender.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        if (perudoServerResponse.getResponseEnum().equals(PerudoServerResponseEnum.JOINED_PARTY)) {
-            Intent intent = new Intent(this, GameActivity.class);
-            startActivity(intent);
-        }
-        else {
-            Toast.makeText(getApplicationContext(), "Couldn't join party!", Toast.LENGTH_SHORT).show();
-        }
+        JoinAsyncTask joinAsyncTask = new JoinAsyncTask(this);
+        joinAsyncTask.execute();
     }
 
     private boolean connectToServer(String address, int port) {
@@ -218,4 +197,51 @@ public class JoinActivity extends AppCompatActivity implements View.OnClickListe
         return isConnected;
     }
 
+    private static class JoinAsyncTask extends AsyncTask<Void, Void, Void> {
+        private WeakReference<JoinActivity> joinActivityWeakReference;
+        private ProgressDialog dialog;
+        private boolean socketEx = false;
+
+        JoinAsyncTask(JoinActivity activity) {
+            joinActivityWeakReference = new WeakReference<JoinActivity>(activity);
+            this.dialog = new ProgressDialog(activity);
+            dialog.setCancelable(false);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dialog.setMessage("Connecting, please wait.");
+            dialog.show();
+        }
+
+        protected Void doInBackground(Void... args) {
+            try {
+                joinActivityWeakReference.get().perudoClient.sendCommand(joinActivityWeakReference.get().perudoClientCommand);
+                joinActivityWeakReference.get().perudoServerResponse = joinActivityWeakReference.get().perudoClient.getResponse();
+            } catch (IOException e) {
+                e.printStackTrace();
+                socketEx = true;
+            }
+            return null;
+        }
+
+        protected void onPostExecute(Void result) {
+            if (dialog.isShowing()) {
+                dialog.dismiss();
+            }
+            if (socketEx) {
+                Toast toast = Toast.makeText(joinActivityWeakReference.get().getApplicationContext(), "Network error!", Toast.LENGTH_SHORT);
+                toast.show();
+                return;
+            }
+            if (joinActivityWeakReference.get().perudoServerResponse.getResponseEnum().equals(PerudoServerResponseEnum.JOINED_PARTY)) {
+                Intent intent = new Intent(joinActivityWeakReference.get(), GameActivity.class);
+                joinActivityWeakReference.get().startActivity(intent);
+            }
+            else {
+                Toast toast = Toast.makeText(joinActivityWeakReference.get().getApplicationContext(), "Couldn't join the party!", Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        }
+    }
 }
