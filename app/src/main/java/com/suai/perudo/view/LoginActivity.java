@@ -1,6 +1,9 @@
 package com.suai.perudo.view;
 
+import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -17,6 +20,7 @@ import com.suai.perudo.web.PerudoServerResponse;
 import com.suai.perudo.web.PerudoServerResponseEnum;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -86,44 +90,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     toast.show();
                     return;
                 }
-                if (perudoClient == null) {
-                    perudoClient = new PerudoClient(address, port, new Player(login), false);
-                    perudoApplication.setPerudoClient(perudoClient);
-                    perudoClient.start();
-                    try {
-                        perudoClient.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                perudoClientCommand = new PerudoClientCommand(PerudoClientCommandEnum.LOGIN, login, password);
-                Thread sender = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            perudoClient.sendCommand(perudoClientCommand);
-                            perudoServerResponse = perudoClient.getResponse();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-                sender.start();
-                try {
-                    sender.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                if (perudoServerResponse.getResponseEnum() == PerudoServerResponseEnum.AUTH_ERROR) {
-                    Toast toast = Toast.makeText(getApplicationContext(), "Auth error!", Toast.LENGTH_SHORT);
-                    toast.show();
-                    return;
-                }
-                else if (perudoServerResponse.getResponseEnum() == PerudoServerResponseEnum.AUTH_SUCCESS) {
-                    Intent intent2 = new Intent(this, MenuActivity.class);
-                    startActivity(intent2);
-                    return;
-                }
+                LoginAsyncTask loginAsyncTask = new LoginAsyncTask(this, login, password, false);
+                loginAsyncTask.execute();
                 break;
 
             case R.id.btnRegister:
@@ -137,44 +105,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     toast.show();
                     return;
                 }
-                if (perudoClient == null) {
-                    perudoClient = new PerudoClient(address, port, new Player(login), false);
-                    perudoApplication.setPerudoClient(perudoClient);
-                    perudoClient.start();
-                    try {
-                        perudoClient.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                perudoClientCommand = new PerudoClientCommand(PerudoClientCommandEnum.REGISTER, login, password);
-                Thread sender2 = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            perudoClient.sendCommand(perudoClientCommand);
-                            perudoServerResponse = perudoClient.getResponse();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-                sender2.start();
-                try {
-                    sender2.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                if (perudoServerResponse.getResponseEnum() == PerudoServerResponseEnum.REG_ERROR) {
-                    Toast toast = Toast.makeText(getApplicationContext(), "Reg error!", Toast.LENGTH_SHORT);
-                    toast.show();
-                    return;
-                }
-                else if (perudoServerResponse.getResponseEnum() == PerudoServerResponseEnum.REG_SUCCESS) {
-                    Intent intent2 = new Intent(this, MenuActivity.class);
-                    startActivity(intent2);
-                    return;
-                }
+                LoginAsyncTask regAsyncTask = new LoginAsyncTask(this, login, password, true);
+                regAsyncTask.execute();
                 break;
 
             case R.id.btnTest1:
@@ -186,6 +118,92 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 editLogin.setText("Vova");
                 editPassword.setText("4321");
                 break;
+        }
+    }
+
+    private static class LoginAsyncTask extends AsyncTask<Void, Void, Void> {
+        private WeakReference<LoginActivity> loginActivityWeakReference;
+        private ProgressDialog dialog;
+        private String login;
+        private String password;
+        private boolean isRegistration;
+
+        private boolean socketEx = false;
+
+        LoginAsyncTask(LoginActivity activity, String login, String password, boolean isRegistration) {
+            loginActivityWeakReference = new WeakReference<LoginActivity>(activity);
+            this.login = login;
+            this.password = password;
+            this.isRegistration = isRegistration;
+            this.dialog = new ProgressDialog(activity);
+            dialog.setCancelable(false);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dialog.setMessage("Connecting, please wait.");
+            dialog.show();
+        }
+
+        protected Void doInBackground(Void... args) {
+            try {
+                if (loginActivityWeakReference.get().perudoClient == null) {
+                    loginActivityWeakReference.get().perudoClient = new PerudoClient(loginActivityWeakReference.get().address, loginActivityWeakReference.get().port, new Player(login), false);
+                    loginActivityWeakReference.get().perudoApplication.setPerudoClient(loginActivityWeakReference.get().perudoClient);
+                    loginActivityWeakReference.get().perudoClient.start();
+                    try {
+                        loginActivityWeakReference.get().perudoClient.join();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (!loginActivityWeakReference.get().perudoClient.isConnected()) {
+                    socketEx = true;
+                    return null;
+                }
+                if (!isRegistration) {
+                    loginActivityWeakReference.get().perudoClientCommand = new PerudoClientCommand(PerudoClientCommandEnum.LOGIN, login, password);
+                }
+                else {
+                    loginActivityWeakReference.get().perudoClientCommand = new PerudoClientCommand(PerudoClientCommandEnum.REGISTER, login, password);
+                }
+                loginActivityWeakReference.get().perudoClient.sendCommand(loginActivityWeakReference.get().perudoClientCommand);
+                loginActivityWeakReference.get().perudoServerResponse = loginActivityWeakReference.get().perudoClient.getResponse();
+            }
+            catch (IOException ex) {
+                socketEx = true;
+            }
+            return null;
+        }
+
+        protected void onPostExecute(Void result) {
+            if (dialog.isShowing()) {
+                dialog.dismiss();
+            }
+            if (socketEx) {
+                Toast toast = Toast.makeText(loginActivityWeakReference.get().getApplicationContext(), "Network error!", Toast.LENGTH_SHORT);
+                toast.show();
+                return;
+            }
+            if (!isRegistration) {
+                if (loginActivityWeakReference.get().perudoServerResponse.getResponseEnum() == PerudoServerResponseEnum.AUTH_ERROR) {
+                    Toast toast = Toast.makeText(loginActivityWeakReference.get().getApplicationContext(), "Auth error!", Toast.LENGTH_SHORT);
+                    toast.show();
+                } else if (loginActivityWeakReference.get().perudoServerResponse.getResponseEnum() == PerudoServerResponseEnum.AUTH_SUCCESS) {
+                    Intent intent = new Intent(loginActivityWeakReference.get(), MenuActivity.class);
+                    loginActivityWeakReference.get().startActivity(intent);
+                }
+            }
+            else {
+                if (loginActivityWeakReference.get().perudoServerResponse.getResponseEnum() == PerudoServerResponseEnum.REG_ERROR) {
+                    Toast toast = Toast.makeText(loginActivityWeakReference.get().getApplicationContext(), "Reg error!", Toast.LENGTH_SHORT);
+                    toast.show();
+                }
+                else if (loginActivityWeakReference.get().perudoServerResponse.getResponseEnum() == PerudoServerResponseEnum.REG_SUCCESS) {
+                    Intent intent2 = new Intent(loginActivityWeakReference.get(), MenuActivity.class);
+                    loginActivityWeakReference.get().startActivity(intent2);
+                }
+            }
         }
     }
 

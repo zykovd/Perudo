@@ -24,6 +24,7 @@ import com.suai.perudo.web.PerudoClient;
 import com.suai.perudo.web.PerudoClientCommand;
 import com.suai.perudo.web.PerudoClientCommandEnum;
 import com.suai.perudo.web.PerudoServerResponse;
+import com.suai.perudo.web.PerudoServerResponseEnum;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,6 +34,8 @@ public class JoinActivity extends AppCompatActivity implements View.OnClickListe
 
     PerudoApplication perudoApplication;
     PerudoClient perudoClient;
+    PerudoClientCommand perudoClientCommand;
+    PerudoServerResponse perudoServerResponse;
     Player player;
 
     Button btnGameJoin;
@@ -157,7 +160,32 @@ public class JoinActivity extends AppCompatActivity implements View.OnClickListe
                 return;
         }
         PartyHeader partyHeader = buttons.get((ImageButton)v);
-        Toast.makeText(getApplicationContext(), partyHeader.getMessage(), Toast.LENGTH_SHORT).show();
+
+        perudoClientCommand = new PerudoClientCommand(PerudoClientCommandEnum.JOIN, partyHeader);
+        Thread sender = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    perudoClient.sendCommand(perudoClientCommand);
+                    perudoServerResponse = perudoClient.getResponse();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        sender.start();
+        try {
+            sender.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (perudoServerResponse.getResponseEnum().equals(PerudoServerResponseEnum.JOINED_PARTY)) {
+            Intent intent = new Intent(this, GameActivity.class);
+            startActivity(intent);
+        }
+        else {
+            Toast.makeText(getApplicationContext(), "Couldn't join party!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private boolean connectToServer(String address, int port) {

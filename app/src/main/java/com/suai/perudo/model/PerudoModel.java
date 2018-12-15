@@ -195,6 +195,11 @@ public class PerudoModel implements Serializable {
         }
     }
 
+    public void removePlayer(Player player) {
+        if (players.contains(player))
+            players.remove(player);
+    }
+
     public int getTotalDicesCount() {
         return totalDicesCount;
     }

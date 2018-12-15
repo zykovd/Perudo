@@ -275,6 +275,9 @@ public class PerudoServerResponse implements Serializable{
             case JOIN_ERROR:
                 message = "Could not connect to party!";
                 break;
+            case GAME_END:
+                message = "Game ended!";
+                break;
             default:
                 message = "Something went wrong!";
                 break;

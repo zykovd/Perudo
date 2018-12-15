@@ -50,7 +50,7 @@ public class PerudoClient extends Thread {
             byte[] bytes = new byte[4];
             String[] b = inetAddress.split(Pattern.quote("."));
             for (String s : b) {
-                bytes[i] = (byte)Integer.parseInt(s);
+                bytes[i] = (byte) Integer.parseInt(s);
                 ++i;
             }
             InetAddress address = InetAddress.getByAddress(bytes);
@@ -64,8 +64,6 @@ public class PerudoClient extends Thread {
             if (isOffline) {
                 PerudoServerResponse perudoServerResponse = gson.fromJson(dataInputStream.readUTF(), PerudoServerResponse.class);
             }
-
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -90,5 +88,12 @@ public class PerudoClient extends Thread {
             e.printStackTrace();
         }
         return perudoServerResponse;
+    }
+
+    public boolean isConnected() {
+        if (socket == null)
+            return false;
+        else
+            return socket.isConnected();
     }
 }

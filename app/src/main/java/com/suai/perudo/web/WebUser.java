@@ -73,4 +73,11 @@ public class WebUser {
         dataOutputStream.close();
         socket.close();
     }
+
+    public boolean isConnected() {
+        if (socket == null)
+            return false;
+        else
+            return socket.isConnected();
+    }
 }

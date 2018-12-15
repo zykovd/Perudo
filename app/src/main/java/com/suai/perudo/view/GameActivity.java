@@ -4,10 +4,12 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.PorterDuff;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -28,6 +30,7 @@ import com.suai.perudo.web.PerudoServerResponse;
 import com.suai.perudo.web.PerudoServerResponseEnum;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 
 public class GameActivity extends AppCompatActivity implements View.OnClickListener, SeekBar.OnSeekBarChangeListener {
 
@@ -62,6 +65,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
 
     private PerudoClientCommand command;
     private PerudoServerResponse serverResponse;
+    private ClientHandlerThread clientHandlerThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,7 +111,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         ad.setMessage(message);
         ad.setPositiveButton(button1String, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int arg1) {
-                new Thread(new Runnable() {
+                Thread sender = new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
@@ -116,7 +120,19 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                             e.printStackTrace();
                         }
                     }
-                }).start();
+                });
+                sender.start();
+                try {
+                    sender.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        finish();
+                    }
+                });
             }
         });
         ad.setNegativeButton(button2String, new DialogInterface.OnClickListener() {
@@ -131,49 +147,94 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
+    public void onBackPressed() {
+        String title = "Warning";
+        String message = "Are you sure you want to exit game?";
+        String button1String = "Yes";
+        String button2String = "No";
+
+        AlertDialog.Builder ad = new AlertDialog.Builder(context);
+        ad.setTitle(title);
+        ad.setMessage(message);
+        ad.setPositiveButton(button1String, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int arg1) {
+                Thread sender = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            perudoClient.sendCommand(command);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+                sender.start();
                 try {
-                    perudoClient.sendCommand(new PerudoClientCommand(PerudoClientCommandEnum.DISCONNECT));
-                } catch (IOException e) {
+                    sender.join();
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        finish();
+                    }
+                });
             }
         });
-        thread.start();
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        ad.setNegativeButton(button2String, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int arg1) {
 
-        //todo disconnects etc
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    perudoClient.sendCommand(new PerudoClientCommand(PerudoClientCommandEnum.DISCONNECT));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
         });
-        thread.start();
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        //todo disconnects etc
+        ad.setCancelable(true);
+        ad.show();
     }
+
+//    @Override
+//    protected void onDestroy() {
+//        super.onDestroy();
+//        Thread thread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                try {
+//                    perudoClient.sendCommand(new PerudoClientCommand(PerudoClientCommandEnum.DISCONNECT));
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
+//        thread.start();
+//        try {
+//            thread.join();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//
+//        //todo disconnects etc
+//    }
+//
+//    @Override
+//    protected void onStop() {
+//        super.onStop();
+//        Thread thread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                try {
+//                    perudoClient.sendCommand(new PerudoClientCommand(PerudoClientCommandEnum.DISCONNECT));
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
+//        thread.start();
+//        try {
+//            thread.join();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        //todo disconnects etc
+//    }
 
     public AlertDialog prepareGameEndAlert() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -195,7 +256,8 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         if (perudoClient != null && perudoServer == null) {
             buttonMakeBid.setEnabled(false);
             buttonDoubt.setEnabled(false);
-            new ClientHandlerThread().start();
+            clientHandlerThread = new ClientHandlerThread(this);
+            clientHandlerThread.execute();
         }
         else if (perudoClient == null && perudoServer != null) {
             onServerPlayer = true;
@@ -473,20 +535,30 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    class ClientHandlerThread extends Thread {
-        @Override
-        public void run() {
-            super.run();
+    private static class ClientHandlerThread extends AsyncTask<Void, Void, Void> {
+        private WeakReference<GameActivity> gameActivityWeakReference;
+
+        ClientHandlerThread(GameActivity activity) {
+            gameActivityWeakReference = new WeakReference<GameActivity>(activity);
+        }
+
+        protected Void doInBackground(Void... args) {
             while (true) {
-                PerudoServerResponse response = perudoClient.getResponse();
+                PerudoServerResponse response = gameActivityWeakReference.get().perudoClient.getResponse();
                 System.out.println("response = " + response);
-                if (response != null && !response.isGameStarted()) {
-                    break;
-                }
-                else {
-                    processResponse(response);
+                if (response != null) {
+                    if (response.getResponseEnum().equals(PerudoServerResponseEnum.LEFT_GAME)) {
+                        return null;
+                    }
+                    if (response.getResponseEnum().equals(PerudoServerResponseEnum.GAME_END)) {
+                        gameActivityWeakReference.get().processResponse(response);
+                        break;
+                    } else {
+                        gameActivityWeakReference.get().processResponse(response);
+                    }
                 }
             }
+            return null;
         }
     }
 
