@@ -495,6 +495,55 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     });
                     break;
+                case IS_MAPUTO:
+                    AlertDialog.Builder ad = new AlertDialog.Builder(context);
+                    ad.setTitle("Maputo");
+                    ad.setMessage("Maputo round?");
+                    ad.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int arg1) {
+                            Thread sender = new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        command = new PerudoClientCommand(PerudoClientCommandEnum.MAPUTO);
+                                        perudoClient.sendCommand(command);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
+                            sender.start();
+                            try {
+                                sender.join();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                    ad.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int arg1) {
+                            Thread sender = new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        command = new PerudoClientCommand(PerudoClientCommandEnum.NOT_MAPUTO);
+                                        perudoClient.sendCommand(command);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
+                            sender.start();
+                            try {
+                                sender.join();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                    ad.setCancelable(false);
+                    ad.show();
+                    break;
             }
             isGameStarted = response.isGameStarted();
             if (isGameStarted) {

@@ -34,6 +34,7 @@ public class PerudoClient extends Thread {
     private String inetAddress;
     private int port;
     private boolean isOffline;
+    private boolean localConnect;
 
     public PerudoClient(String inetAddress, int port, Player player, boolean isOffline) {
         this.inetAddress = inetAddress;
@@ -63,7 +64,14 @@ public class PerudoClient extends Thread {
             this.dataInputStream = new DataInputStream(socket.getInputStream());
             if (isOffline) {
                 PerudoServerResponse perudoServerResponse = gson.fromJson(dataInputStream.readUTF(), PerudoServerResponse.class);
+                if (perudoServerResponse.getResponseEnum().equals(PerudoServerResponseEnum.CONNECTED)) {
+                    localConnect = true;
+                }
+                else {
+                    localConnect = false;
+                }
             }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -95,5 +103,9 @@ public class PerudoClient extends Thread {
             return false;
         else
             return socket.isConnected();
+    }
+
+    public boolean isLocalConnect() {
+        return localConnect;
     }
 }
