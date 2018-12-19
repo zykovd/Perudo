@@ -21,7 +21,7 @@ import java.util.Map;
  * Created by dmitry on 11.09.18.
  */
 
-public class PerudoServer extends Thread{
+public class PerudoServer extends Thread {
 
     private GsonBuilder builder = new GsonBuilder();
     private Gson gson = builder.create();
@@ -39,7 +39,7 @@ public class PerudoServer extends Thread{
 
     private HashMap<WebUser, Player> players = new HashMap<>();
 
-    public int getNumberOfPlayers(){
+    public int getNumberOfPlayers() {
         return players.size();
     }
 
@@ -63,8 +63,8 @@ public class PerudoServer extends Thread{
             e.printStackTrace();
         }
         //while (model == null) {
-        while (true) {
-            try {
+        try {
+            while (true) {
                 System.out.println("PerudoServer.run");
                 System.out.println("serverSocket = " + serverSocket);
                 Socket clientSocket = serverSocket.accept();
@@ -74,13 +74,12 @@ public class PerudoServer extends Thread{
                 Player player = gson.fromJson(dataInputStream.readUTF(), Player.class);
                 webUser.setLogin(player.getName());
 
-                for (WebUser user: players.keySet()) {
+                for (WebUser user : players.keySet()) {
                     if (user.equals(webUser) && user.isConnected()) {
                         DataOutputStream dataOutputStream = webUser.getDataOutputStream();
                         dataOutputStream.writeUTF(new PerudoServerResponse(model, PerudoServerResponseEnum.JOIN_ERROR, null).toJson());
                         return;
-                    }
-                    else if(user.equals(webUser) && !user.isConnected()) {
+                    } else if (user.equals(webUser) && !user.isConnected()) {
                         DataOutputStream dataOutputStream = webUser.getDataOutputStream();
                         dataOutputStream.writeUTF(new PerudoServerResponse(model, PerudoServerResponseEnum.CONNECTED, players.get(webUser).getDices()).toJson());
                         Player p = players.remove(webUser);
@@ -98,15 +97,15 @@ public class PerudoServer extends Thread{
                 new PerudoServerThread(webUser).start();
                 System.out.println("player = " + player);
             }
-            catch (IOException ex) {
-                ex.printStackTrace();
-            }
+        }
+        catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
 
     public PerudoServerResponse startGame() {
         ArrayList<Player> playersList = new ArrayList<>();
-        for (Map.Entry<WebUser, Player> entry: players.entrySet()) {
+        for (Map.Entry<WebUser, Player> entry : players.entrySet()) {
             playersList.add(entry.getValue());
         }
         playersList.add(onServerPlayer);
@@ -129,16 +128,20 @@ public class PerudoServer extends Thread{
     public PerudoServerResponse processOnServerPlayerCommand(PerudoClientCommand perudoClientCommand) {
         PerudoServerResponse perudoServerResponse = null;
         if (model == null || !model.isPlayersTurn(onServerPlayer)) {
-            perudoServerResponse = new PerudoServerResponse(model, PerudoServerResponseEnum.WRONG_TURN,null);
+            perudoServerResponse = new PerudoServerResponse(model, PerudoServerResponseEnum.WRONG_TURN, null);
             return perudoServerResponse;
         }
         boolean isStateChanged = tryProceedCommand(perudoClientCommand, null);
         if (isStateChanged) {
             if (newTurn) {
-                perudoServerResponse = new PerudoServerResponse(model, PerudoServerResponseEnum.ROUND_RESULT, onServerPlayer.getDices());
-                perudoServerResponse.setMessage(message);
-            }
-            else {
+                if (loser.equals(onServerPlayer.getName()) && onServerPlayer.getNumberOfDices() == 1) {
+                    perudoServerResponse = new PerudoServerResponse(model, PerudoServerResponseEnum.IS_MAPUTO, onServerPlayer.getDices());
+                    perudoServerResponse.setMessage(message);
+                } else {
+                    perudoServerResponse = new PerudoServerResponse(model, PerudoServerResponseEnum.ROUND_RESULT, onServerPlayer.getDices());
+                    perudoServerResponse.setMessage(message);
+                }
+            } else {
                 perudoServerResponse = new PerudoServerResponse(model, PerudoServerResponseEnum.TURN_ACCEPTED, onServerPlayer.getDices());
             }
             Thread resender = new Thread(new Runnable() {
@@ -158,8 +161,7 @@ public class PerudoServer extends Thread{
                 e.printStackTrace();
             }
             newTurn = false;
-        }
-        else {
+        } else {
             perudoServerResponse = new PerudoServerResponse(model, PerudoServerResponseEnum.INVALID_BID, null);
         }
         return perudoServerResponse;
@@ -169,32 +171,30 @@ public class PerudoServer extends Thread{
         Player player;
         if (webUser == null) {
             player = onServerPlayer;
-        }
-        else {
+        } else {
             player = players.get(webUser);
         }
         if (perudoClientCommand == null) {
             return false;
-        }
-        else {
+        } else {
             PerudoClientCommandEnum commandEnum = perudoClientCommand.getCommand();
             switch (commandEnum) {
                 case BID:
                     Pair bid = perudoClientCommand.getBid();
-                    if (model.tryMakeBid(player, (int)bid.first, (int)bid.second))
+                    if (model.tryMakeBid(player, (int) bid.first, (int) bid.second))
                         return true;
                     else
                         return false;
                 case DOUBT:
                     if (model.doubt(player)) {
                         loser = model.getCurrentBidPlayer().getName();
-                    }
-                    else {
+                    } else {
                         loser = player.getName();
                     }
                     message = loser + " loosing one dice!";
                     if (model.getPlayers().size() == 1) {
-                        message += "\n" + model.getPlayers().get(0).getName()+" is the winner!";
+                        model.setGameEnded(true);
+                        message += "\n" + model.getPlayers().get(0).getName() + " is the winner!";
                     }
                     newTurn = true;
                     return true;
@@ -234,13 +234,11 @@ public class PerudoServer extends Thread{
                 if (loser.equals(onServerPlayer.getName()) && onServerPlayer.getNumberOfDices() == 1) {
                     response = new PerudoServerResponse(model, PerudoServerResponseEnum.IS_MAPUTO, onServerPlayer.getDices());
                     response.setMessage(message);
-                }
-                else {
+                } else {
                     response = new PerudoServerResponse(model, PerudoServerResponseEnum.ROUND_RESULT, onServerPlayer.getDices());
                     response.setMessage(message);
                 }
-            }
-            else {
+            } else {
                 response = new PerudoServerResponse(model, PerudoServerResponseEnum.TURN_ACCEPTED, onServerPlayer.getDices());
             }
             view.processResponse(response);
@@ -248,20 +246,18 @@ public class PerudoServer extends Thread{
     }
 
     private void resendChangesToClients() throws IOException {
-        for (WebUser webUser: players.keySet()) {
+        for (WebUser webUser : players.keySet()) {
             DataOutputStream dataOutputStream = webUser.getDataOutputStream();
             PerudoServerResponse response;
             if (newTurn) {
                 if (loser.equals(webUser.getLogin()) && players.get(webUser).getNumberOfDices() == 1) {
                     response = new PerudoServerResponse(model, PerudoServerResponseEnum.IS_MAPUTO, players.get(webUser).getDices());
                     response.setMessage(message);
-                }
-                else {
+                } else {
                     response = new PerudoServerResponse(model, PerudoServerResponseEnum.ROUND_RESULT, players.get(webUser).getDices());
                     response.setMessage(message);
                 }
-            }
-            else {
+            } else {
                 response = new PerudoServerResponse(model, PerudoServerResponseEnum.TURN_ACCEPTED, players.get(webUser).getDices());
             }
             dataOutputStream.writeUTF(response.toJson());
@@ -293,9 +289,12 @@ public class PerudoServer extends Thread{
                         if (stateChanged) {
                             resendChangesToClients();
                             sendChangesToOnServerPlayer();
+                            if (model.isGameEnded()) {
+                                serverSocket.close();
+                                return;
+                            }
                             newTurn = false;
-                        }
-                        else {
+                        } else {
                             PerudoServerResponse response = new PerudoServerResponse(model, PerudoServerResponseEnum.INVALID_BID, players.get(webUser).getDices());
                             webUser.getDataOutputStream().writeUTF(response.toJson());
                         }

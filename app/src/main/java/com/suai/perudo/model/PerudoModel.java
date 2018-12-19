@@ -26,6 +26,7 @@ public class PerudoModel implements Serializable {
     private int currentTurn = 0;
 
     private boolean isGameStarted = false;
+    private boolean isGameEnded = false;
 
     public PerudoModel() {
     }
@@ -258,6 +259,14 @@ public class PerudoModel implements Serializable {
 
     public void setInitDicesPerPlayer(int initDicesPerPlayer) {
         this.initDicesPerPlayer = initDicesPerPlayer;
+    }
+
+    public boolean isGameEnded() {
+        return isGameEnded;
+    }
+
+    public void setGameEnded(boolean gameEnded) {
+        isGameEnded = gameEnded;
     }
 
     public Random getRandom() {
