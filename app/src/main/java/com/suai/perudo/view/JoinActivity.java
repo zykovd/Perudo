@@ -94,7 +94,12 @@ public class JoinActivity extends AppCompatActivity implements View.OnClickListe
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                PerudoServerResponse perudoServerResponse = perudoClient.getResponse();
+                PerudoServerResponse perudoServerResponse = null;
+                try {
+                    perudoServerResponse = perudoClient.getResponse();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 parties = perudoServerResponse.getParties();
             }
         });

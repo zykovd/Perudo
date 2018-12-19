@@ -88,13 +88,9 @@ public class PerudoClient extends Thread {
         dataOutputStream.writeUTF(perudoClientCommand.toJson());
     }
 
-    public PerudoServerResponse getResponse() {
+    public PerudoServerResponse getResponse() throws IOException {
         PerudoServerResponse perudoServerResponse = null;
-        try {
-            perudoServerResponse = gson.fromJson(dataInputStream.readUTF(), PerudoServerResponse.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        perudoServerResponse = gson.fromJson(dataInputStream.readUTF(), PerudoServerResponse.class);
         return perudoServerResponse;
     }
 

@@ -62,7 +62,7 @@ public class GameActivity extends AppCompatActivity {
         prepareWidgets();
     }
 
-    /*@Override
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
@@ -101,7 +101,12 @@ public class GameActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         try {
-                            perudoClient.sendCommand(command);
+                            if (onServerPlayer) {
+                                perudoServer.processOnServerPlayerCommand(command);
+                            }
+                            else {
+                                perudoClient.sendCommand(command);
+                            }
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -134,7 +139,7 @@ public class GameActivity extends AppCompatActivity {
         ad.show();
 
         return true;
-    }*/
+    }
 
     @Override
     public void onBackPressed() {
@@ -270,7 +275,7 @@ public class GameActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setDisplayHomeAsUpEnabled(false);
         }
 
 
@@ -452,20 +457,25 @@ public class GameActivity extends AppCompatActivity {
         }
 
         protected Void doInBackground(Void... args) {
-            while (true) {
-                PerudoServerResponse response = gameActivityWeakReference.get().perudoClient.getResponse();
-                System.out.println("response = " + response);
-                if (response != null) {
-                    if (response.getResponseEnum().equals(PerudoServerResponseEnum.LEFT_GAME)) {
-                        return null;
-                    }
-                    if (response.getResponseEnum().equals(PerudoServerResponseEnum.GAME_END)) {
-                        gameActivityWeakReference.get().processResponse(response);
-                        break;
-                    } else {
-                        gameActivityWeakReference.get().processResponse(response);
+            try {
+                while (true) {
+                    PerudoServerResponse response = gameActivityWeakReference.get().perudoClient.getResponse();
+                    System.out.println("response = " + response);
+                    if (response != null) {
+                        if (response.getResponseEnum().equals(PerudoServerResponseEnum.LEFT_GAME)) {
+                            return null;
+                        }
+                        if (response.getResponseEnum().equals(PerudoServerResponseEnum.GAME_END)) {
+                            gameActivityWeakReference.get().processResponse(response);
+                            break;
+                        } else {
+                            gameActivityWeakReference.get().processResponse(response);
+                        }
                     }
                 }
+            }
+            catch (IOException ex) {
+                ex.printStackTrace();
             }
             return null;
         }

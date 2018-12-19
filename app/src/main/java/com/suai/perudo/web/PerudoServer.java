@@ -191,7 +191,7 @@ public class PerudoServer extends Thread {
                     } else {
                         loser = player.getName();
                     }
-                    message = loser + " loosing one dice!";
+                    message = loser + " loosing one dice!\n" + model.getDoubtMessage();
                     if (model.getPlayers().size() == 1) {
                         model.setGameEnded(true);
                         message += "\n" + model.getPlayers().get(0).getName() + " is the winner!";

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent" android:layout_height="match_parent"
     android:orientation="vertical">
@@ -7,7 +7,8 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1">
+        android:layout_above="@+id/bottomSenderLayout"
+        android:layout_alignParentTop="true">
 
         <LinearLayout
             android:id="@+id/chatLayout"
@@ -15,22 +16,24 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-
         </LinearLayout>
 
     </ScrollView>
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="10"
+        android:id="@+id/bottomSenderLayout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@color/colorPrimaryDark"
         android:orientation="horizontal">
 
         <EditText
             android:id="@+id/editMessageText"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:textColor="#FFFFFF"/>
 
         <Button
             android:id="@+id/btnSend"
@@ -43,4 +46,4 @@
 
     </LinearLayout>
 
-</LinearLayout>
+</RelativeLayout>
