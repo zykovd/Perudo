@@ -41,22 +41,27 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
         LinearLayout list = (LinearLayout) v.findViewById(R.id.chatLayout);
         for (int i = 0; i < 30; ++i) {
             LayoutInflater inflater2 = LayoutInflater.from(getContext());
-            LinearLayout layout = (LinearLayout) inflater2.inflate(R.layout.party_layout, null, false);
+            LinearLayout layout = (LinearLayout) inflater2.inflate(R.layout.chat_message_layout, null, false);
             LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
             layoutParams.setMargins(16,16,16,0);
             layout.setLayoutParams(layoutParams);
 
             TextView title = (TextView) inflater2.inflate(R.layout.join_title, null,false);
             title.setText("From: " + String.valueOf(i));
-            LinearLayout.LayoutParams layoutParams1 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.MATCH_PARENT);
+            LinearLayout.LayoutParams layoutParams1 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT);
+            layoutParams1.setMargins(16,16,16,16);
             layoutParams1.weight = 5;
+            title.setTextColor(getResources().getColor(R.color.whiteText));
             layoutParams1.gravity = Gravity.CENTER;
             title.setLayoutParams(layoutParams1);
             layout.addView(title);
 
+            LinearLayout.LayoutParams layoutParams2 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT);
             TextView title2 = (TextView) inflater2.inflate(R.layout.join_title, null,false);
             title2.setText("Message" + String.valueOf(i));
-            title2.setLayoutParams(layoutParams1);
+            layoutParams2.weight = 1;
+            title2.setTextColor(getResources().getColor(R.color.whiteText));
+            title2.setLayoutParams(layoutParams2);
             layout.addView(title2);
 
             list.addView(layout);

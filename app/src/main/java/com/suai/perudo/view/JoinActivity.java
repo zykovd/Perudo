@@ -124,6 +124,7 @@ public class JoinActivity extends AppCompatActivity implements View.OnClickListe
 
             TextView title = (TextView) inflater.inflate(R.layout.join_title, null,false);
             title.setText(parties.get(i).getTitle());
+            title.setTextColor(getResources().getColor(R.color.whiteText));
             LinearLayout.LayoutParams layoutParams1 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.MATCH_PARENT);
             layoutParams1.weight = 5;
             layoutParams1.gravity = Gravity.CENTER;
@@ -132,6 +133,7 @@ public class JoinActivity extends AppCompatActivity implements View.OnClickListe
 
             TextView title2 = (TextView) inflater.inflate(R.layout.join_title, null,false);
             title2.setText(String.valueOf(parties.get(i).getHash()));
+            title2.setTextColor(getResources().getColor(R.color.whiteText));
             title2.setLayoutParams(layoutParams1);
             layout.addView(title2);
 
