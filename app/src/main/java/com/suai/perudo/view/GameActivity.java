@@ -277,8 +277,10 @@ public class GameActivity extends AppCompatActivity {
         } else if (perudoClient == null && perudoServer != null) {
             onServerPlayer = true;
             perudoServer.setView(this);
-            PerudoServerResponse perudoServerResponse = perudoServer.startGame();
-            processResponse(perudoServerResponse);
+            if (!perudoServer.isContinueSavedGame()) {
+                PerudoServerResponse perudoServerResponse = perudoServer.startGame();
+                processResponse(perudoServerResponse);
+            }
         }
     }
 
@@ -298,8 +300,6 @@ public class GameActivity extends AppCompatActivity {
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(false);
         }
-
-
         viewPager = (ViewPager) findViewById(R.id.viewpager);
         setupViewPager(viewPager);
 

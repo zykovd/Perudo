@@ -1,7 +1,9 @@
 package com.suai.perudo.view;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
@@ -14,6 +16,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.suai.perudo.R;
 import com.suai.perudo.model.Player;
 import com.suai.perudo.web.PerudoClient;
@@ -23,6 +27,11 @@ import com.suai.perudo.web.PerudoServer;
 import com.suai.perudo.web.PerudoServerResponse;
 import com.suai.perudo.web.PerudoServerResponseEnum;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.math.BigInteger;
@@ -54,6 +63,8 @@ public class SettingsActivity extends AppCompatActivity implements View.OnClickL
 
     Button btnCreateParty;
     EditText editPartyTitle;
+
+    String jsonString;
 
 
     @Override
@@ -100,6 +111,26 @@ public class SettingsActivity extends AppCompatActivity implements View.OnClickL
 
             btnStartServer.setEnabled(true);
             btnRefresh.setEnabled(false);
+
+            FileInputStream fis = null;
+            String filename = "temp_game.json";
+            jsonString = null;
+            Context context = SettingsActivity.this;
+            try {
+                fis = context.openFileInput(filename);
+                int i;
+                StringBuilder stringBuilder = new StringBuilder();
+                while(( i = fis.read()) != -1){
+                    stringBuilder.append((char)i);
+                }
+                jsonString = stringBuilder.toString();
+                fis.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            System.out.println("jsonString = " + jsonString);
         }
         else {
             perudoClient = perudoApplication.getPerudoClient();
@@ -108,6 +139,44 @@ public class SettingsActivity extends AppCompatActivity implements View.OnClickL
             btnCreateParty.setOnClickListener(this);
             editPartyTitle = (EditText) findViewById(R.id.editPartyTitle);
         }
+    }
+
+    public void loadSavedGameDialog(String gameJson) {
+        String title = "Saved game";
+        String message = "Do you want to start saved game?";
+        String button1String = "Yes";
+        String button2String = "No";
+
+        AlertDialog.Builder ad = new AlertDialog.Builder(SettingsActivity.this);
+        ad.setTitle(title);
+        ad.setMessage(message);
+        ad.setPositiveButton(button1String, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int arg1) {
+                GsonBuilder builder = new GsonBuilder();
+                Gson gson = builder.excludeFieldsWithoutExposeAnnotation().create();
+                PerudoServer savedPerudoServer = gson.fromJson(jsonString, PerudoServer.class);
+                try {
+                    perudoServer = new PerudoServer(Integer.parseInt(editPort.getText().toString()), savedPerudoServer.getOnServerPlayer());
+                    perudoServer.load(savedPerudoServer);
+                    perudoServer.start();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+                perudoApplication.setPerudoServer(perudoServer);
+                Intent intent = new Intent(SettingsActivity.this, GameActivity.class);
+                intent.putExtra("isGameStarted", true);
+                startActivity(intent);
+            }
+        });
+        ad.setNegativeButton(button2String, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int arg1) {
+                startServer(Integer.parseInt(editPort.getText().toString()));
+            }
+        });
+        ad.setCancelable(true);
+        ad.show();
     }
 
     @Override
@@ -127,9 +196,15 @@ public class SettingsActivity extends AppCompatActivity implements View.OnClickL
                     toast.show();
                     break;
                 }
+                if (jsonString != null) {
+                    loadSavedGameDialog(jsonString);
+                }
+                else {
+                    startServer(Integer.parseInt(editPort.getText().toString()));
+                }
                 btnStartServer.setEnabled(false);
                 editPort.setEnabled(false);
-                startServer(Integer.parseInt(editPort.getText().toString()));
+//                startServer(Integer.parseInt(editPort.getText().toString()));
                 btnRefresh.setEnabled(true);
                 break;
 

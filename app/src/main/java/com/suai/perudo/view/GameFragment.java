@@ -118,6 +118,7 @@ public class GameFragment extends Fragment implements View.OnClickListener, Seek
 
         gameActivity = ((GameActivity)getActivity());
         gameActivity.prepareNet();
+
         return v;
     }
 

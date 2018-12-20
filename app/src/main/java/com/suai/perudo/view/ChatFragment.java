@@ -49,6 +49,17 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        if (activity.perudoServer != null) {
+            if (activity.perudoServer.isContinueSavedGame()) {
+                PerudoServerResponse perudoServerResponse = activity.perudoServer.processOnServerPlayerCommand(new PerudoClientCommand(PerudoClientCommandEnum.START_GAME));
+                activity.processResponse(perudoServerResponse);
+            }
+        }
+    }
+
+    @Override
     public void onClick(View v) {
         activity.command = null;
         switch (v.getId()) {

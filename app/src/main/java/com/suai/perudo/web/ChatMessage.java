@@ -1,12 +1,14 @@
 package com.suai.perudo.web;
 
+import com.google.gson.annotations.Expose;
+
 /**
  * Created by dmitry on 20.12.18.
  */
 
 public class ChatMessage {
-    private String senderName;
-    private String message;
+    @Expose private String senderName;
+    @Expose private String message;
 
     public ChatMessage(String senderName, String message) {
         this.senderName = senderName;
