@@ -56,6 +56,13 @@ public class GameActivity extends AppCompatActivity {
     private ClientHandlerThread clientHandlerThread;
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (perudoServer != null)
+            perudoServer.finish();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
@@ -98,6 +105,14 @@ public class GameActivity extends AppCompatActivity {
         ad.setMessage(message);
         ad.setPositiveButton(button1String, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int arg1) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (serverResponse.getResponseEnum().equals(PerudoServerResponseEnum.GAME_END)) {
+                            getParent().finish();
+                        }
+                    }
+                });
                 Thread sender = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -143,47 +158,53 @@ public class GameActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-//        String title = "Warning";
-//        String message = "Are you sure you want to exit game?";
-//        String button1String = "Yes";
-//        String button2String = "No";
-//
-//        AlertDialog.Builder ad = new AlertDialog.Builder(context);
-//        ad.setTitle(title);
-//        ad.setMessage(message);
-//        ad.setPositiveButton(button1String, new DialogInterface.OnClickListener() {
-//            public void onClick(DialogInterface dialog, int arg1) {
-//                Thread sender = new Thread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        try {
-//                            perudoClient.sendCommand(command);
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                });
-//                sender.start();
-//                try {
-//                    sender.join();
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//                runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        finish();
-//                    }
-//                });
-//            }
-//        });
-//        ad.setNegativeButton(button2String, new DialogInterface.OnClickListener() {
-//            public void onClick(DialogInterface dialog, int arg1) {
-//
-//            }
-//        });
-//        ad.setCancelable(true);
-//        ad.show();
+//        super.onBackPressed();
+        String title = "Warning";
+        String message = "Are you sure you want to return to menu?";
+        String button1String = "Yes";
+        String button2String = "No";
+
+        AlertDialog.Builder ad = new AlertDialog.Builder(GameActivity.this);
+        ad.setTitle(title);
+        ad.setMessage(message);
+        ad.setPositiveButton(button1String, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int arg1) {
+                Thread sender = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            command = new PerudoClientCommand(PerudoClientCommandEnum.RETURN);
+                            if (onServerPlayer) {
+                                perudoServer.processOnServerPlayerCommand(command);
+                            } else {
+                                perudoClient.sendCommand(command);
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+                sender.start();
+                try {
+                    sender.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        finish();
+                    }
+                });
+            }
+        });
+        ad.setNegativeButton(button2String, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int arg1) {
+
+            }
+        });
+        ad.setCancelable(true);
+        ad.show();
     }
 
 //    @Override
@@ -335,71 +356,89 @@ public class GameActivity extends AppCompatActivity {
                         public void run() {
                             ShowDoubtDialog showDoubtDialog = new ShowDoubtDialog();
                             showDoubtDialog.showDialog(activity, serverResponse.getPlayers(), serverResponse.getMessage());
-                            if (serverResponse.getPlayers().size() == 1) {
-//                                AlertDialog gameEnd = prepareGameEndAlert();
-//                                gameEnd.show(); //TODO Not tested
-                                gameFragment.buttonMakeBid.setEnabled(false);
-                                gameFragment.buttonDoubt.setEnabled(false);
-                            }
+//                            if (serverResponse.getPlayers().size() == 1) {
+////                                AlertDialog gameEnd = prepareGameEndAlert();
+////                                gameEnd.show(); //TODO Not tested
+//                                gameFragment.buttonMakeBid.setEnabled(false);
+//                                gameFragment.buttonDoubt.setEnabled(false);
+//                            }
                         }
                     });
                     break;
+                case GAME_END:
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            gameFragment.buttonMakeBid.setEnabled(false);
+                            gameFragment.buttonDoubt.setEnabled(false);
+                            ShowDoubtDialog showDoubtDialog = new ShowDoubtDialog();
+                            showDoubtDialog.showDialog(activity, serverResponse.getPlayers(), serverResponse.getMessage());
+                        }
+                    });
+                    return;
                 case IS_MAPUTO:
-                    AlertDialog.Builder ad = new AlertDialog.Builder(GameActivity.this);
-                    ad.setTitle("Maputo");
-                    ad.setMessage("Maputo round?");
-                    ad.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int arg1) {
-                            Thread sender = new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        command = new PerudoClientCommand(PerudoClientCommandEnum.MAPUTO);
-                                        if (onServerPlayer) {
-                                            perudoServer.processOnServerPlayerCommand(command);
-                                        } else {
-                                            perudoClient.sendCommand(command);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            AlertDialog.Builder ad = new AlertDialog.Builder(GameActivity.this);
+                            ad.setTitle("Maputo");
+                            ad.setMessage("Maputo round?");
+                            ad.setCancelable(false);
+                            ad.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int arg1) {
+                                    Thread sender = new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            try {
+                                                command = new PerudoClientCommand(PerudoClientCommandEnum.MAPUTO);
+                                                if (onServerPlayer) {
+                                                    perudoServer.processOnServerPlayerCommand(command);
+                                                } else {
+                                                    perudoClient.sendCommand(command);
+                                                }
+                                            } catch (IOException e) {
+                                                e.printStackTrace();
+                                            }
                                         }
-                                    } catch (IOException e) {
+                                    });
+                                    sender.start();
+                                    try {
+                                        sender.join();
+                                    } catch (InterruptedException e) {
                                         e.printStackTrace();
                                     }
                                 }
                             });
-                            sender.start();
-                            try {
-                                sender.join();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    });
-                    ad.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int arg1) {
-                            Thread sender = new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        command = new PerudoClientCommand(PerudoClientCommandEnum.NOT_MAPUTO);
-                                        if (onServerPlayer) {
-                                            perudoServer.processOnServerPlayerCommand(command);
-                                        } else {
-                                            perudoClient.sendCommand(command);
+                            ad.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int arg1) {
+                                    Thread sender = new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            try {
+                                                command = new PerudoClientCommand(PerudoClientCommandEnum.NOT_MAPUTO);
+                                                if (onServerPlayer) {
+                                                    perudoServer.processOnServerPlayerCommand(command);
+                                                } else {
+                                                    perudoClient.sendCommand(command);
+                                                }
+                                            } catch (IOException e) {
+                                                e.printStackTrace();
+                                            }
                                         }
-                                    } catch (IOException e) {
+                                    });
+                                    sender.start();
+                                    try {
+                                        sender.join();
+                                    } catch (InterruptedException e) {
                                         e.printStackTrace();
                                     }
                                 }
                             });
-                            sender.start();
-                            try {
-                                sender.join();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
+                            ad.setCancelable(false);
+                            ad.show();
+                            ShowDoubtDialog showDoubtDialog = new ShowDoubtDialog();
+                            showDoubtDialog.showDialog(activity, serverResponse.getPlayers(), serverResponse.getMessage());
                         }
                     });
-                    ad.setCancelable(false);
-                    ad.show();
                     break;
             }
             isGameStarted = response.isGameStarted();

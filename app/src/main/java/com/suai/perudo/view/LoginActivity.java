@@ -1,14 +1,18 @@
 package com.suai.perudo.view;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.suai.perudo.R;
@@ -22,13 +26,14 @@ import com.suai.perudo.web.PerudoServerResponseEnum;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
-public class LoginActivity extends AppCompatActivity implements View.OnClickListener{
+public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
 
     Button btnStayOffline;
     Button btnLogin;
     Button btnRegister;
     EditText editLogin;
     EditText editPassword;
+    ImageButton btnServerAddress;
 
     Button test1;
     Button test2;
@@ -48,18 +53,20 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         perudoApplication = (PerudoApplication) this.getApplication();
 
-        btnStayOffline = (Button)findViewById(R.id.btnOffline);
+        btnStayOffline = (Button) findViewById(R.id.btnOffline);
         btnStayOffline.setOnClickListener(this);
-        btnLogin = (Button)findViewById(R.id.btnLogin);
+        btnLogin = (Button) findViewById(R.id.btnLogin);
         btnLogin.setOnClickListener(this);
-        btnRegister = (Button)findViewById(R.id.btnRegister);
+        btnRegister = (Button) findViewById(R.id.btnRegister);
         btnRegister.setOnClickListener(this);
-        editLogin = (EditText)findViewById(R.id.editLogin);
-        editPassword = (EditText)findViewById(R.id.editPassword);
+        btnServerAddress = (ImageButton) findViewById(R.id.imageButtonEnterServerAddress);
+        btnServerAddress.setOnClickListener(this);
+        editLogin = (EditText) findViewById(R.id.editLogin);
+        editPassword = (EditText) findViewById(R.id.editPassword);
 
-        test1 = (Button)findViewById(R.id.btnTest1);
+        test1 = (Button) findViewById(R.id.btnTest1);
         test1.setOnClickListener(this);
-        test2 = (Button)findViewById(R.id.btnTest2);
+        test2 = (Button) findViewById(R.id.btnTest2);
         test2.setOnClickListener(this);
     }
 
@@ -79,6 +86,25 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 Intent intent = new Intent(this, MenuActivity.class);
                 startActivity(intent);
                 break;
+
+            case R.id.imageButtonEnterServerAddress:
+                AlertDialog.Builder mBuilder = new AlertDialog.Builder(LoginActivity.this);
+                final EditText editText = new EditText(this);
+                editText.setText(address);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                    editText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                }
+                mBuilder.setView(editText);
+                mBuilder.setTitle("Please enter perudo-remote-server address!");
+                mBuilder.setPositiveButton("Submit", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        address = String.valueOf(editText.getText());
+                    }
+                });
+                mBuilder.show();
+                break;
+
             case R.id.btnLogin:
                 if (login.equals("")) {
                     Toast toast = Toast.makeText(getApplicationContext(), "Please, enter your login!", Toast.LENGTH_SHORT);
@@ -163,14 +189,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 }
                 if (!isRegistration) {
                     loginActivityWeakReference.get().perudoClientCommand = new PerudoClientCommand(PerudoClientCommandEnum.LOGIN, login, password);
-                }
-                else {
+                } else {
                     loginActivityWeakReference.get().perudoClientCommand = new PerudoClientCommand(PerudoClientCommandEnum.REGISTER, login, password);
                 }
                 loginActivityWeakReference.get().perudoClient.sendCommand(loginActivityWeakReference.get().perudoClientCommand);
                 loginActivityWeakReference.get().perudoServerResponse = loginActivityWeakReference.get().perudoClient.getResponse();
-            }
-            catch (IOException ex) {
+            } catch (IOException ex) {
                 socketEx = true;
             }
             return null;
@@ -193,13 +217,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     Intent intent = new Intent(loginActivityWeakReference.get(), MenuActivity.class);
                     loginActivityWeakReference.get().startActivity(intent);
                 }
-            }
-            else {
+            } else {
                 if (loginActivityWeakReference.get().perudoServerResponse.getResponseEnum() == PerudoServerResponseEnum.REG_ERROR) {
                     Toast toast = Toast.makeText(loginActivityWeakReference.get().getApplicationContext(), "Reg error!", Toast.LENGTH_SHORT);
                     toast.show();
-                }
-                else if (loginActivityWeakReference.get().perudoServerResponse.getResponseEnum() == PerudoServerResponseEnum.REG_SUCCESS) {
+                } else if (loginActivityWeakReference.get().perudoServerResponse.getResponseEnum() == PerudoServerResponseEnum.REG_SUCCESS) {
                     Intent intent2 = new Intent(loginActivityWeakReference.get(), MenuActivity.class);
                     loginActivityWeakReference.get().startActivity(intent2);
                 }

@@ -12,17 +12,17 @@
         android:roundIcon="@drawable/launcher5611_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".view.LoginActivity">
+        <activity android:name=".view.LoginActivity"  android:screenOrientation="portrait" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".view.MenuActivity" />
-        <activity android:name=".view.SettingsActivity" />
-        <activity android:name=".view.JoinActivity" />
-        <activity android:name=".view.GameActivity" />
+        <activity android:name=".view.MenuActivity"  android:screenOrientation="portrait" />
+        <activity android:name=".view.SettingsActivity"  android:screenOrientation="portrait" />
+        <activity android:name=".view.JoinActivity"  android:screenOrientation="portrait" />
+        <activity android:name=".view.GameActivity" android:screenOrientation="portrait" />
     </application>
 
     <uses-permission android:name="android.permission.INTERNET" />

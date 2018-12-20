@@ -27,6 +27,7 @@ public class ShowDoubtDialog {
         final Dialog dialog = new Dialog(activity);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(true);
+
         dialog.setContentView(R.layout.dialog_doubt_layout);
         LinearLayout linearLayout = (LinearLayout) dialog.findViewById(R.id.dialogDoubtLinearLayout);
         linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
