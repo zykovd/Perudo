@@ -15,6 +15,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 /**
@@ -38,6 +39,10 @@ public class PerudoServer extends Thread {
     private int port;
 
     private HashMap<WebUser, Player> players = new HashMap<>();
+
+    private LinkedList<ChatMessage> chatMessages = new LinkedList<>();
+    private int maxChatMessages = 30;
+    private boolean newChatMessage = false;
 
     public int getNumberOfPlayers() {
         return players.size();
@@ -142,7 +147,12 @@ public class PerudoServer extends Thread {
                     perudoServerResponse.setMessage(message);
                 }
             } else {
-                perudoServerResponse = new PerudoServerResponse(model, PerudoServerResponseEnum.TURN_ACCEPTED, onServerPlayer.getDices());
+                if (newChatMessage) {
+                    perudoServerResponse = new PerudoServerResponse(PerudoServerResponseEnum.NEW_CHAT_MESSAGE, chatMessages.getLast());
+                }
+                else {
+                    perudoServerResponse = new PerudoServerResponse(model, PerudoServerResponseEnum.TURN_ACCEPTED, onServerPlayer.getDices());
+                }
             }
             Thread resender = new Thread(new Runnable() {
                 @Override
@@ -161,6 +171,7 @@ public class PerudoServer extends Thread {
                 e.printStackTrace();
             }
             newTurn = false;
+            newChatMessage = false;
         } else {
             perudoServerResponse = new PerudoServerResponse(model, PerudoServerResponseEnum.INVALID_BID, null);
         }
@@ -185,6 +196,10 @@ public class PerudoServer extends Thread {
                         return true;
                     else
                         return false;
+                case CHAT_MESSAGE:
+                    addChatMessage(new ChatMessage(webUser.getLogin(), perudoClientCommand.getMessage()));
+                    newChatMessage = true;
+                    return true;
                 case DOUBT:
                     if (model.doubt(player)) {
                         loser = model.getCurrentBidPlayer().getName();
@@ -239,7 +254,12 @@ public class PerudoServer extends Thread {
                     response.setMessage(message);
                 }
             } else {
-                response = new PerudoServerResponse(model, PerudoServerResponseEnum.TURN_ACCEPTED, onServerPlayer.getDices());
+                if (newChatMessage) {
+                    response = new PerudoServerResponse(PerudoServerResponseEnum.NEW_CHAT_MESSAGE, chatMessages.getLast());
+                }
+                else {
+                    response = new PerudoServerResponse(model, PerudoServerResponseEnum.TURN_ACCEPTED, onServerPlayer.getDices());
+                }
             }
             view.processResponse(response);
         }
@@ -258,10 +278,22 @@ public class PerudoServer extends Thread {
                     response.setMessage(message);
                 }
             } else {
-                response = new PerudoServerResponse(model, PerudoServerResponseEnum.TURN_ACCEPTED, players.get(webUser).getDices());
+                if (newChatMessage) {
+                    response = new PerudoServerResponse(PerudoServerResponseEnum.NEW_CHAT_MESSAGE, chatMessages.getLast());
+                }
+                else {
+                    response = new PerudoServerResponse(model, PerudoServerResponseEnum.TURN_ACCEPTED, players.get(webUser).getDices());
+                }
             }
             dataOutputStream.writeUTF(response.toJson());
         }
+    }
+
+    public void addChatMessage(ChatMessage message) {
+        if (chatMessages.size() == maxChatMessages) {
+            chatMessages.removeFirst();
+        }
+        chatMessages.addLast(message);
     }
 
     private class PerudoServerThread extends Thread {
@@ -294,6 +326,7 @@ public class PerudoServer extends Thread {
                                 return;
                             }
                             newTurn = false;
+                            newChatMessage = false;
                         } else {
                             PerudoServerResponse response = new PerudoServerResponse(model, PerudoServerResponseEnum.INVALID_BID, players.get(webUser).getDices());
                             webUser.getDataOutputStream().writeUTF(response.toJson());

@@ -16,5 +16,6 @@ public enum PerudoClientCommandEnum {
     START_GAME,
     DISCONNECT,
     LOGIN,
-    REGISTER
+    REGISTER,
+    CHAT_MESSAGE
 }

@@ -24,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.suai.perudo.R;
+import com.suai.perudo.web.ChatMessage;
 import com.suai.perudo.web.PerudoClient;
 import com.suai.perudo.web.PerudoClientCommand;
 import com.suai.perudo.web.PerudoClientCommandEnum;
@@ -50,7 +51,7 @@ public class GameActivity extends AppCompatActivity {
     boolean onServerPlayer = false;
     boolean isGameStarted = false;
 
-    private PerudoClientCommand command;
+    PerudoClientCommand command;
     private PerudoServerResponse serverResponse;
     private ClientHandlerThread clientHandlerThread;
 
@@ -103,8 +104,7 @@ public class GameActivity extends AppCompatActivity {
                         try {
                             if (onServerPlayer) {
                                 perudoServer.processOnServerPlayerCommand(command);
-                            }
-                            else {
+                            } else {
                                 perudoClient.sendCommand(command);
                             }
                         } catch (IOException e) {
@@ -291,7 +291,6 @@ public class GameActivity extends AppCompatActivity {
     }
 
 
-
     public void processResponse(PerudoServerResponse response) {
         if (response != null) {
             serverResponse = response;
@@ -299,6 +298,22 @@ public class GameActivity extends AppCompatActivity {
                 gameFragment.dices = response.getDices();
             PerudoServerResponseEnum responseEnum = response.getResponseEnum();
             switch (responseEnum) {
+                case NEW_CHAT_MESSAGE:
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            for (ChatMessage message : serverResponse.getChatMessages())
+                                chatFragment.addChatMessageView(message);
+                        }
+                    });
+                    return;
+                case JOINED_PARTY:
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            for (ChatMessage message : serverResponse.getChatMessages())
+                                chatFragment.addChatMessageView(message);
+                        }
+                    });
+                    break;
                 case INVALID_BID:
                     runOnUiThread(new Runnable() {
                         public void run() {
@@ -473,8 +488,7 @@ public class GameActivity extends AppCompatActivity {
                         }
                     }
                 }
-            }
-            catch (IOException ex) {
+            } catch (IOException ex) {
                 ex.printStackTrace();
             }
             return null;
