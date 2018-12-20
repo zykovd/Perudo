@@ -62,10 +62,15 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                try {
-                                    activity.perudoClient.sendCommand(activity.command);
-                                } catch (IOException e) {
-                                    e.printStackTrace();
+                                if (activity.onServerPlayer) {
+                                    activity.perudoServer.processOnServerPlayerCommand(activity.command);
+                                }
+                                else {
+                                    try {
+                                        activity.perudoClient.sendCommand(activity.command);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
                             }
                         }).start();
@@ -89,7 +94,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
         title.setText(message.getSenderName());
         LinearLayout.LayoutParams layoutParams1 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT);
         layoutParams1.setMargins(16,16,16,16);
-        layoutParams1.weight = 3;
+        layoutParams1.weight = 2;
 //        title.setTextColor(getResources().getColor(R.color.whiteText));
         layoutParams1.gravity = Gravity.CENTER;
         title.setLayoutParams(layoutParams1);

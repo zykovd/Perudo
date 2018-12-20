@@ -301,16 +301,18 @@ public class GameActivity extends AppCompatActivity {
                 case NEW_CHAT_MESSAGE:
                     runOnUiThread(new Runnable() {
                         public void run() {
-                            for (ChatMessage message : serverResponse.getChatMessages())
-                                chatFragment.addChatMessageView(message);
+                            if (serverResponse.getChatMessages() != null)
+                                for (ChatMessage message : serverResponse.getChatMessages())
+                                    chatFragment.addChatMessageView(message);
                         }
                     });
                     return;
                 case JOINED_PARTY:
                     runOnUiThread(new Runnable() {
                         public void run() {
-                            for (ChatMessage message : serverResponse.getChatMessages())
-                                chatFragment.addChatMessageView(message);
+                            if (serverResponse.getChatMessages() != null)
+                                for (ChatMessage message : serverResponse.getChatMessages())
+                                    chatFragment.addChatMessageView(message);
                         }
                     });
                     break;

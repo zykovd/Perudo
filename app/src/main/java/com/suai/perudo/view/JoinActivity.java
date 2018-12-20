@@ -58,7 +58,7 @@ public class JoinActivity extends AppCompatActivity implements View.OnClickListe
         perudoClient = perudoApplication.getPerudoClient();
 
 
-        if (perudoApplication.isOffline()) { //TODO don't forget about this case
+        if (perudoApplication.isOffline()) {
             setContentView(R.layout.activity_join);
 
             player = perudoApplication.getPlayer();
@@ -193,7 +193,7 @@ public class JoinActivity extends AppCompatActivity implements View.OnClickListe
                 perudoClient.start();
                 perudoClient.join();
                 perudoApplication.setPerudoClient(perudoClient);
-                isConnected = true;
+                isConnected = perudoClient.isLocalConnect();
             } catch (Exception e) {
                 e.printStackTrace();
             }

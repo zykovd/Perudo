@@ -49,9 +49,12 @@ public class WebUser {
     }
 
     public void disconnect() throws IOException {
-        dataInputStream.close();
-        dataOutputStream.close();
-        socket.close();
+        if (socket != null) {
+            dataInputStream.close();
+            dataOutputStream.close();
+            socket.close();
+            socket = null;
+        }
     }
 
     public boolean isConnected() {
