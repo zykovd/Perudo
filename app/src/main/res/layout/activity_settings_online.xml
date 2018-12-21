@@ -30,6 +30,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:textAlignment="center"
                 android:text="Party title:" />
 
             <EditText
@@ -39,6 +40,7 @@
                 android:layout_weight="1"
                 android:ems="10"
                 android:hint="Enter title"
+                android:textAlignment="center"
                 android:inputType="numberDecimal"
                 android:text="TestParty" />
         </LinearLayout>
@@ -53,6 +55,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:textAlignment="center"
                 android:text="Select timeout:" />
 
             <EditText
@@ -62,6 +65,31 @@
                 android:layout_weight="1"
                 android:ems="10"
                 android:inputType="numberDecimal" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/partyBotsText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textAlignment="center"
+                android:text="Number of bots:" />
+
+            <EditText
+                android:id="@+id/editPartyBots"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:layout_weight="1"
+                android:ems="10"
+                android:inputType="numberDecimal"
+                android:text="0" />
 
         </LinearLayout>
 

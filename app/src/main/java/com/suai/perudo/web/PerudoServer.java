@@ -33,20 +33,28 @@ public class PerudoServer extends Thread {
 
     private GameActivity view = null;
 
-    @Expose private PerudoModel model;
-    @Expose private String message;
-    @Expose private String loser;
-    @Expose private boolean newTurn = false;
+    @Expose
+    private PerudoModel model;
+    @Expose
+    private String message;
+    @Expose
+    private String loser;
+    @Expose
+    private boolean newTurn = false;
 
     private ServerSocket serverSocket;
-    @Expose private Player onServerPlayer;
+    @Expose
+    private Player onServerPlayer;
     private int port;
 
     private HashMap<WebUser, Player> players = new HashMap<>();
 
-    @Expose private LinkedList<ChatMessage> chatMessages = new LinkedList<>();
-    @Expose private int maxChatMessages = 30;
-    @Expose private boolean newChatMessage = false;
+    @Expose
+    private LinkedList<ChatMessage> chatMessages = new LinkedList<>();
+    @Expose
+    private int maxChatMessages = 30;
+    @Expose
+    private boolean newChatMessage = false;
     private boolean reloadSending = false;
 
     public int getNumberOfPlayers() {
@@ -91,19 +99,19 @@ public class PerudoServer extends Thread {
                 Socket clientSocket = serverSocket.accept();
 
                 WebUser webUser = new WebUser(clientSocket);
+
                 DataInputStream dataInputStream = webUser.getDataInputStream();
                 Player player = gson.fromJson(dataInputStream.readUTF(), Player.class);
-
-                if (model.getPlayers().contains(player))
-                    player = model.getPlayers().get(model.getPlayers().indexOf(player));
-
+                System.out.println("player = " + player);
                 webUser.setLogin(player.getName());
 
+                /*boolean foundUser = false;
                 for (WebUser user : players.keySet()) {
                     if (user.equals(webUser) && user.isConnected()) {
                         DataOutputStream dataOutputStream = webUser.getDataOutputStream();
                         dataOutputStream.writeUTF(new PerudoServerResponse(model, PerudoServerResponseEnum.JOIN_ERROR, null).toJson());
-                        return;
+                        foundUser = true;
+                        break;
                     } else if (user.equals(webUser) && !user.isConnected()) {
                         DataOutputStream dataOutputStream = webUser.getDataOutputStream();
                         dataOutputStream.writeUTF(new PerudoServerResponse(model, PerudoServerResponseEnum.CONNECTED, players.get(webUser).getDices()).toJson());
@@ -112,8 +120,27 @@ public class PerudoServer extends Thread {
                         players.put(webUser, p);
                         new PerudoServerThread(webUser).start();
                         System.out.println("player = " + p);
-                        return;
+                        foundUser = true;
+                        break;
                     }
+                }
+                if (foundUser)
+                    continue;*/
+
+                if (model != null && model.getPlayers().contains(player)) {
+                    DataOutputStream dataOutputStream = webUser.getDataOutputStream();
+                    player = model.getPlayers().get(model.getPlayers().indexOf(player));
+                    dataOutputStream.writeUTF(new PerudoServerResponse(model, PerudoServerResponseEnum.CONNECTED, player.getDices()).toJson());
+                    dataOutputStream.writeUTF(new PerudoServerResponse(model, chatMessages, PerudoServerResponseEnum.JOINED_PARTY, player.getDices()).toJson());
+                    players.remove(webUser);
+                    players.put(webUser, player);
+                    new PerudoServerThread(webUser).start();
+                    continue;
+                }
+                else if (model != null) {
+                    DataOutputStream dataOutputStream = webUser.getDataOutputStream();
+                    dataOutputStream.writeUTF(new PerudoServerResponse(model, PerudoServerResponseEnum.JOIN_ERROR, null).toJson());
+                    continue;
                 }
 
                 DataOutputStream dataOutputStream = webUser.getDataOutputStream();
@@ -129,7 +156,7 @@ public class PerudoServer extends Thread {
 //                        e.printStackTrace();
 //                    }
 //                }
-                System.out.println("player = " + player);
+//                System.out.println("player = " + player);
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -170,7 +197,7 @@ public class PerudoServer extends Thread {
         this.newChatMessage = perudoServer.newChatMessage;
     }
 
-    public boolean isContinueSavedGame(){
+    public boolean isContinueSavedGame() {
         if (model == null)
             return false;
         else
@@ -192,8 +219,7 @@ public class PerudoServer extends Thread {
         if (isStateChanged) {
             if (reloadSending) {
                 perudoServerResponse = new PerudoServerResponse(model, chatMessages, PerudoServerResponseEnum.JOINED_PARTY, onServerPlayer.getDices());
-            }
-            else {
+            } else {
                 if (newTurn) {
                     if (loser.equals(onServerPlayer.getName()) && onServerPlayer.getNumberOfDices() == 1) {
                         perudoServerResponse = new PerudoServerResponse(model, PerudoServerResponseEnum.IS_MAPUTO, onServerPlayer.getDices());
@@ -355,8 +381,7 @@ public class PerudoServer extends Thread {
             PerudoServerResponse response;
             if (reloadSending) {
                 response = new PerudoServerResponse(model, chatMessages, PerudoServerResponseEnum.JOINED_PARTY, players.get(webUser).getDices());
-            }
-            else {
+            } else {
                 if (newTurn) {
                     if (loser != null && loser.equals(webUser.getLogin()) && players.get(webUser).getNumberOfDices() == 1) {
                         response = new PerudoServerResponse(model, PerudoServerResponseEnum.IS_MAPUTO, players.get(webUser).getDices());
@@ -377,7 +402,7 @@ public class PerudoServer extends Thread {
         }
     }
 
-    public void finish(){
+    public void finish() {
         try {
             serverSocket.close();
         } catch (IOException e) {
@@ -397,7 +422,7 @@ public class PerudoServer extends Thread {
         return gson.toJson(this);
     }
 
-    public void saveGame(){
+    public void saveGame() {
         Context context = view;
         String filename = "temp_game.json";
         FileOutputStream fos = null;

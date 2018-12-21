@@ -54,6 +54,7 @@ public class WebUser {
             dataOutputStream.close();
             socket.close();
             socket = null;
+            System.out.println("WebUser.disconnect");
         }
     }
 

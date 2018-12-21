@@ -63,6 +63,7 @@ public class SettingsActivity extends AppCompatActivity implements View.OnClickL
 
     Button btnCreateParty;
     EditText editPartyTitle;
+    EditText editPartyBots;
 
     String jsonString;
 
@@ -138,6 +139,7 @@ public class SettingsActivity extends AppCompatActivity implements View.OnClickL
             btnCreateParty = (Button) findViewById(R.id.btnCreateParty);
             btnCreateParty.setOnClickListener(this);
             editPartyTitle = (EditText) findViewById(R.id.editPartyTitle);
+            editPartyBots = (EditText) findViewById(R.id.editPartyBots);
         }
     }
 
@@ -219,7 +221,12 @@ public class SettingsActivity extends AppCompatActivity implements View.OnClickL
                     toast.show();
                     break;
                 }
-                RequestAsyncTask requestAsyncTask = new RequestAsyncTask(this, String.valueOf(editPartyTitle.getText()));
+                if (String.valueOf(editPartyBots.getText()).equals("")) {
+                    Toast toast = Toast.makeText(getApplicationContext(), "Please enter number of bots!", Toast.LENGTH_SHORT);
+                    toast.show();
+                    break;
+                }
+                RequestAsyncTask requestAsyncTask = new RequestAsyncTask(this, String.valueOf(editPartyTitle.getText()), Integer.parseInt(String.valueOf(editPartyBots.getText())));
                 requestAsyncTask.execute();
                 break;
         }
@@ -267,13 +274,15 @@ public class SettingsActivity extends AppCompatActivity implements View.OnClickL
         private WeakReference<SettingsActivity> settingsActivityWeakReference;
         private ProgressDialog dialog;
         private String partyTitle;
+        private int partyBots;
         private boolean socketEx = false;
 
-        RequestAsyncTask(SettingsActivity activity, String partyTitle) {
+        RequestAsyncTask(SettingsActivity activity, String partyTitle, int partyBots) {
             this.settingsActivityWeakReference = new WeakReference<SettingsActivity>(activity);
             this.dialog = new ProgressDialog(activity);
             this.dialog.setCancelable(false);
             this.partyTitle = partyTitle;
+            this.partyBots = partyBots;
         }
 
         @Override
@@ -284,7 +293,7 @@ public class SettingsActivity extends AppCompatActivity implements View.OnClickL
 
         protected Void doInBackground(Void... args) {
             try {
-                settingsActivityWeakReference.get().perudoClient.sendCommand(new PerudoClientCommand(PerudoClientCommandEnum.NEW_PARTY, partyTitle));
+                settingsActivityWeakReference.get().perudoClient.sendCommand(new PerudoClientCommand(PerudoClientCommandEnum.NEW_PARTY, partyTitle, partyBots));
                 settingsActivityWeakReference.get().perudoServerResponse = settingsActivityWeakReference.get().perudoClient.getResponse();
             } catch (IOException e) {
                 e.printStackTrace();

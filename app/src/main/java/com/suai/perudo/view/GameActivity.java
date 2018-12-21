@@ -507,6 +507,7 @@ public class GameActivity extends AppCompatActivity {
 
     private static class ClientHandlerThread extends AsyncTask<Void, Void, Void> {
         private WeakReference<GameActivity> gameActivityWeakReference;
+        private boolean error = false;
 
         ClientHandlerThread(GameActivity activity) {
             gameActivityWeakReference = new WeakReference<GameActivity>(activity);
@@ -530,9 +531,27 @@ public class GameActivity extends AppCompatActivity {
                     }
                 }
             } catch (IOException ex) {
+                error = true;
                 ex.printStackTrace();
             }
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            if (error) {
+                AlertDialog.Builder ad = new AlertDialog.Builder(gameActivityWeakReference.get());
+                ad.setTitle("Network error");
+                ad.setMessage("Server closed! Do you want to leave the game?");
+                ad.setCancelable(true);
+                ad.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int arg1) {
+                        gameActivityWeakReference.get().finish();
+                    }
+                });
+                ad.setCancelable(false);
+                ad.show();
+            }
         }
     }
 
