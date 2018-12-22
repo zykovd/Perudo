@@ -312,10 +312,6 @@ public class PerudoServer extends Thread {
                         model.setGameEnded(true);
                         message += "\n" + model.getPlayers().get(0).getName() + " is the winner!";
                     }
-//                    if (model.isPlayersTurn(player)) {
-//                        model.forwardTurnTransition();
-//                        model.getPlayers().remove(player);
-//                    }
                     return true;
                 case RETURN:
                     try {

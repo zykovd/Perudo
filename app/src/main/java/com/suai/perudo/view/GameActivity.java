@@ -57,9 +57,9 @@ public class GameActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         if (perudoServer != null)
             perudoServer.finish();
+        super.onDestroy();
     }
 
     @Override
@@ -95,6 +95,17 @@ public class GameActivity extends AppCompatActivity {
                 message += "exit application?";
                 command = new PerudoClientCommand(PerudoClientCommandEnum.DISCONNECT);
                 break;
+            case R.id.itemInfo:
+                AlertDialog.Builder ad = new AlertDialog.Builder(context);
+                ad.setTitle("Rules");
+                ad.setMessage("Rules of the game");
+                ad.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int arg1) {
+                    }
+                });
+                ad.setCancelable(true);
+                ad.show();
+                return true;
             default:
                 command = null;
                 break;
@@ -118,6 +129,7 @@ public class GameActivity extends AppCompatActivity {
                     public void run() {
                         try {
                             if (onServerPlayer) {
+                                //command = new PerudoClientCommand(PerudoClientCommandEnum.DISCONNECT);
                                 perudoServer.processOnServerPlayerCommand(command);
                             } else {
                                 perudoClient.sendCommand(command);
@@ -137,9 +149,9 @@ public class GameActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         if (command.getCommand().equals(PerudoClientCommandEnum.DISCONNECT)) {
+                            if (perudoServer != null)
+                                perudoServer.finish();
                             finishAffinity();
-                        } else {
-                            finish();
                         }
                     }
                 });

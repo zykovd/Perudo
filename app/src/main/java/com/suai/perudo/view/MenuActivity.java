@@ -42,8 +42,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
                 startActivity(intentJoin);
                 break;
             case R.id.btnExit:
-//                Intent intentQ = new Intent(this, ActivityQuadrant.class);
-//                startActivity(intentQ);
+                finishAffinity();
                 break;
         }
     }

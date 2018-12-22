@@ -1,6 +1,7 @@
 package com.suai.perudo.view;
 
 import android.graphics.PorterDuff;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -107,6 +108,9 @@ public class GameFragment extends Fragment implements View.OnClickListener, Seek
         seekQuantity = (SeekBar) v.findViewById(R.id.seekQuantity);
         seekQuantity.setOnSeekBarChangeListener(this);
         seekQuantity.setMax(30);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            seekQuantity.setMin(1);
+        }
 
         textCurrentTurn = (TextView) v.findViewById(R.id.textCurrentTurn);
         textPlayerName = (TextView) v.findViewById(R.id.textPlayerName);
