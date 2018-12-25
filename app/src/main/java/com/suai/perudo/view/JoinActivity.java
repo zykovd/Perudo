@@ -199,7 +199,6 @@ public class JoinActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
         else {
-            //TODO idk what to do
         }
         return isConnected;
     }
